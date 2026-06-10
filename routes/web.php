@@ -16,3 +16,4 @@
 $router->get('/', function () {
     return 'Hello World';
 });
+$router->post('api/login', 'AuthController@login');
