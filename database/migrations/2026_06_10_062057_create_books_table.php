@@ -12,7 +12,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('books', function (Blueprint $table) {
-            $table->id();
+            $table->id('id_buku'); // Kolom id_buku sebagai primary key
             $table->string('judul');
             $table->string('pengarang');
             $table->string('penerbit');

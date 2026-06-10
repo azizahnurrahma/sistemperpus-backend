@@ -15,25 +15,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // 1. Bersihkan data user lama dulu agar tidak duplikat saat dijalankan ulang
-        User::truncate();
+        // 1. Matikan pengecekan relasi sementara biar ga diblokir MySQL
+        \Schema::disableForeignKeyConstraints();
 
-        // 2. Tambah data dummy Akun Admin (akun kamu)
-        User::create([
-            'nama' => 'Admin',
-            'email' => 'admin@gmail.com',
-            'password' => Hash::make('admin123'), // Otomatis di-hash/enkripsi aman
-            'role' => 'admin'
-        ]);
+        // 2. Panggil seeder prodi kita
+        $this->call(ProdiSeeder::class);
 
-        // 3. Tambah data dummy Akun Mahasiswa (buat tes login mahasiswa nanti)
-        User::create([
-            'nama' => 'Budi Sudarsono',
-            'email' => 'budi@gmail.com',
-            'password' => Hash::make('mahasiswa123'),
-            'role' => 'mahasiswa'
-        ]);
-
-        $this->command->info('Data user berhasil ditambahkan!');
+        // 3. Hidupkan kembali pengecekan relasinya biar database tetap aman
+        \Schema::enableForeignKeyConstraints();
     }
 }
