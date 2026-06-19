@@ -7,7 +7,7 @@ use App\Models\Book;
 
 class BookController extends Controller
 {
-    // 1. TAMPILKAN SEMUA BUKU (Get All)
+    // 1. TAMPILKAN SEMUA BUKU (Bisa diakses Admin & Mahasiswa)
     public function index()
     {
         $books = Book::all();
@@ -17,9 +17,17 @@ class BookController extends Controller
         ], 200);
     }
 
-    // 2. TAMBAH BUKU BARU (Create)
+    // 2. TAMBAH BUKU BARU (SATPAM: HANYA ADMIN)
     public function store(Request $request)
     {
+        // Cek Role: Tolak kalau bukan admin
+        if (auth()->user()->role !== 'admin') {
+            return response()->json([
+                'status' => 'fail', 
+                'message' => 'Akses Ditolak! Hanya Admin yang boleh menambah buku.'
+            ], 403);
+        }
+
         $this->validate($request, [
             'judul' => 'required',
             'pengarang' => 'required',
@@ -37,7 +45,7 @@ class BookController extends Controller
         ], 201);
     }
 
-    // 3. LIHAT DETAIL SATU BUKU (Get Detail)
+    // 3. LIHAT DETAIL SATU BUKU (Bisa diakses Admin & Mahasiswa)
     public function show($id)
     {
         $book = Book::find($id);
@@ -49,9 +57,17 @@ class BookController extends Controller
         return response()->json(['status' => 'success', 'data' => $book], 200);
     }
 
-    // 4. UBAH DATA BUKU (Update)
+    // 4. UBAH DATA BUKU (SATPAM: HANYA ADMIN)
     public function update(Request $request, $id)
     {
+        // Cek Role: Tolak kalau bukan admin
+        if (auth()->user()->role !== 'admin') {
+            return response()->json([
+                'status' => 'fail', 
+                'message' => 'Akses Ditolak! Hanya Admin yang boleh mengubah buku.'
+            ], 403);
+        }
+
         $book = Book::find($id);
 
         if (!$book) {
@@ -67,9 +83,17 @@ class BookController extends Controller
         ], 200);
     }
 
-    // 5. HAPUS BUKU (Delete)
+    // 5. HAPUS BUKU (SATPAM: HANYA ADMIN)
     public function destroy($id)
     {
+        // Cek Role: Tolak kalau bukan admin
+        if (auth()->user()->role !== 'admin') {
+            return response()->json([
+                'status' => 'fail', 
+                'message' => 'Akses Ditolak! Hanya Admin yang boleh menghapus buku.'
+            ], 403);
+        }
+
         $book = Book::find($id);
 
         if (!$book) {
