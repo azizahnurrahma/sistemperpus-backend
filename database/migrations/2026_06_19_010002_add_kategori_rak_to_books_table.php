@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::table('books', function (Blueprint $table) {
             $table->unsignedBigInteger('id_kategori')->nullable()->after('stok');
-            $table->unsignedBigInteger('id_rak')->nullable()->after('id_kategori');
+            
+            // 🛑 UBAH DI SINI: Dari unsignedBigInteger id_rak menjadi string rak
+            $table->string('rak', 50)->nullable()->after('id_kategori');
         });
     }
 
@@ -23,7 +25,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('books', function (Blueprint $table) {
-            $table->dropColumn(['id_kategori', 'id_rak']);
+            // 🛑 UBAH DI SINI: Sesuaikan nama kolom yang di-drop saat rollback
+            $table->dropColumn(['id_kategori', 'rak']);
         });
     }
 };
