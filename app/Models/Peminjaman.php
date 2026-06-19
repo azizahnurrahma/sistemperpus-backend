@@ -21,4 +21,22 @@ class Peminjaman extends Model
         'tanggal_dikembalikan',
         'status'
     ];
+
+    /**
+     * Relasi ke model Book (Satu transaksi peminjaman memiliki satu buku)
+     */
+    public function book()
+    {
+        // 'id_buku' dicocokkan dengan foreign key yang ada di $fillable kamu
+        return $this->belongsTo(Book::class, 'id_buku');
+    }
+
+    /**
+     * Relasi ke model User (Satu transaksi peminjaman dimiliki oleh satu user/mahasiswa)
+     */
+    public function user()
+    {
+        // 'id_user' dicocokkan dengan foreign key yang ada di $fillable kamu
+        return $this->belongsTo(User::class, 'id_user');
+    }
 }

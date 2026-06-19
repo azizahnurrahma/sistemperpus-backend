@@ -10,8 +10,7 @@ $router->get('/', function () {
 // PUBLIC ROUTES
 // ============================================
 $router->post('login', 'AuthController@login');
-// Mempertahankan rute lama yang mungkin diperlukan
-$router->post('api/login', 'AuthController@login');
+
 $router->post('api/register/admin', 'AuthController@register');
 
 // ============================================
@@ -19,9 +18,6 @@ $router->post('api/register/admin', 'AuthController@register');
 // ============================================
 $router->group(['middleware' => 'auth'], function () use ($router) {
     
-    // Rute dari sistem lama yang masih dikunci auth
-    $router->post('api/register/mahasiswa', 'AuthController@registerMahasiswa');
-
     $router->post('logout', 'AuthController@logout');
     $router->get('user/profil', 'AuthController@getProfile');
     

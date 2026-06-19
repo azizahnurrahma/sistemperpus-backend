@@ -17,7 +17,7 @@ class BookController extends Controller
         ], 200);
     }
 
-    // 2. TAMBAH BUKU BARU (HANYA ADMIN - sudah dilindungi middleware)
+    // 2. TAMBAH BUKU BARU (HANYA ADMIN - input rak manual teks bebas)
     public function store(Request $request)
     {
         $this->validate($request, [
@@ -25,10 +25,17 @@ class BookController extends Controller
             'pengarang' => 'required',
             'penerbit' => 'required',
             'tahun_terbit' => 'required|numeric',
-            'stok' => 'required|numeric'
+            'stok' => 'required|numeric',
+            'rak' => 'required' // Diwajibkan mengisi nama rak berupa teks bebas
         ]);
 
-        $book = Book::create($request->all());
+        // Ambil semua data inputan Postman
+        $input = $request->all();
+        
+        // LOGIKA SAKTI: Ubah teks rak menjadi HURUF BESAR SEMUA biar seragam di database
+        $input['rak'] = strtoupper($request->rak);
+
+        $book = Book::create($input);
 
         return response()->json([
             'status' => 'success',
@@ -49,7 +56,7 @@ class BookController extends Controller
         return response()->json(['status' => 'success', 'data' => $book], 200);
     }
 
-    // 4. UBAH DATA BUKU (HANYA ADMIN - sudah dilindungi middleware)
+    // 4. UBAH DATA BUKU (HANYA ADMIN)
     public function update(Request $request, $id)
     {
         $book = Book::find($id);
@@ -58,7 +65,14 @@ class BookController extends Controller
             return response()->json(['status' => 'fail', 'message' => 'Buku tidak ditemukan'], 404);
         }
 
-        $book->update($request->all());
+        $input = $request->all();
+        
+        // Jika admin ikut memperbarui nama rak, ubah juga jadi huruf besar
+        if ($request->has('rak')) {
+            $input['rak'] = strtoupper($request->rak);
+        }
+
+        $book->update($input);
 
         return response()->json([
             'status' => 'success',
@@ -67,7 +81,7 @@ class BookController extends Controller
         ], 200);
     }
 
-    // 5. HAPUS BUKU (HANYA ADMIN - sudah dilindungi middleware)
+    // 5. HAPUS BUKU (HANYA ADMIN)
     public function destroy($id)
     {
         $book = Book::find($id);
@@ -91,11 +105,21 @@ class BookController extends Controller
         return response()->json(['status' => 'success', 'data' => $books], 200);
     }
 
-    // 7. BUKU BERDASARKAN RAK
-    public function getByRak($id)
+    // 7. BUKU BERDASARKAN RAK (Ubah parameter pencarian dari ID Angka menjadi Nama Rak Teks)
+    public function getByRak($nama_rak)
     {
-        $books = Book::where('id_rak', $id)->get();
-        return response()->json(['status' => 'success', 'data' => $books], 200);
+        // Ubah input pencarian menjadi huruf besar agar sinkron dengan database
+        $rakCari = strtoupper($nama_rak);
+
+        // Cari semua buku yang nama raknya cocok
+        $books = Book::where('rak', $rakCari)->get();
+        
+        return response()->json([
+            'status' => 'success',
+            'rak_dicari' => $rakCari,
+            'total_buku' => $books->count(),
+            'data' => $books
+        ], 200);
     }
 
     // 8. CEK STOK BUKU
