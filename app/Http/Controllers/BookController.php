@@ -17,17 +17,9 @@ class BookController extends Controller
         ], 200);
     }
 
-    // 2. TAMBAH BUKU BARU (SATPAM: HANYA ADMIN)
+    // 2. TAMBAH BUKU BARU (HANYA ADMIN - sudah dilindungi middleware)
     public function store(Request $request)
     {
-        // Cek Role: Tolak kalau bukan admin
-        if (auth()->user()->role !== 'admin') {
-            return response()->json([
-                'status' => 'fail', 
-                'message' => 'Akses Ditolak! Hanya Admin yang boleh menambah buku.'
-            ], 403);
-        }
-
         $this->validate($request, [
             'judul' => 'required',
             'pengarang' => 'required',
@@ -57,17 +49,9 @@ class BookController extends Controller
         return response()->json(['status' => 'success', 'data' => $book], 200);
     }
 
-    // 4. UBAH DATA BUKU (SATPAM: HANYA ADMIN)
+    // 4. UBAH DATA BUKU (HANYA ADMIN - sudah dilindungi middleware)
     public function update(Request $request, $id)
     {
-        // Cek Role: Tolak kalau bukan admin
-        if (auth()->user()->role !== 'admin') {
-            return response()->json([
-                'status' => 'fail', 
-                'message' => 'Akses Ditolak! Hanya Admin yang boleh mengubah buku.'
-            ], 403);
-        }
-
         $book = Book::find($id);
 
         if (!$book) {
@@ -83,17 +67,9 @@ class BookController extends Controller
         ], 200);
     }
 
-    // 5. HAPUS BUKU (SATPAM: HANYA ADMIN)
+    // 5. HAPUS BUKU (HANYA ADMIN - sudah dilindungi middleware)
     public function destroy($id)
     {
-        // Cek Role: Tolak kalau bukan admin
-        if (auth()->user()->role !== 'admin') {
-            return response()->json([
-                'status' => 'fail', 
-                'message' => 'Akses Ditolak! Hanya Admin yang boleh menghapus buku.'
-            ], 403);
-        }
-
         $book = Book::find($id);
 
         if (!$book) {
@@ -105,6 +81,39 @@ class BookController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Buku berhasil dihapus'
+        ], 200);
+    }
+
+    // 6. BUKU BERDASARKAN KATEGORI
+    public function getByKategori($id)
+    {
+        $books = Book::where('id_kategori', $id)->get();
+        return response()->json(['status' => 'success', 'data' => $books], 200);
+    }
+
+    // 7. BUKU BERDASARKAN RAK
+    public function getByRak($id)
+    {
+        $books = Book::where('id_rak', $id)->get();
+        return response()->json(['status' => 'success', 'data' => $books], 200);
+    }
+
+    // 8. CEK STOK BUKU
+    public function cekStok($id)
+    {
+        $book = Book::find($id);
+
+        if (!$book) {
+            return response()->json(['status' => 'fail', 'message' => 'Buku tidak ditemukan'], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'id_buku' => $book->id_buku,
+                'judul' => $book->judul,
+                'stok' => $book->stok
+            ]
         ], 200);
     }
 }
