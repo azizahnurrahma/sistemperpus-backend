@@ -21,7 +21,8 @@ class Book extends Model
         'tahun_terbit', 
         'stok', 
         'id_kategori', 
-        'rak' 
+        'rak',
+        'gambar'
     ];
 
     public function peminjamans()

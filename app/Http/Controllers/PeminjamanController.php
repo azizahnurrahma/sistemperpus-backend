@@ -13,12 +13,66 @@ class PeminjamanController extends Controller
     {
         $user = $request->user();
 
-        // Jika admin, tampilkan semua peminjaman
+        // Jika admin, tampilkan semua peminjaman dengan data profile mahasiswa
         if ($user->role === 'admin') {
-            $peminjamans = Peminjaman::all();
+            $peminjamans = \DB::table('peminjamans')
+                ->join('users', 'peminjamans.id_user', '=', 'users.id_user')
+                ->join('mahasiswas', 'users.id_user', '=', 'mahasiswas.id_user')
+                ->join('books', 'peminjamans.id_buku', '=', 'books.id_buku')
+                ->select(
+                    'peminjamans.id_transaksi',
+                    'peminjamans.id_user',
+                    'peminjamans.id_buku',
+                    'peminjamans.tanggal_pinjam',
+                    'peminjamans.tanggal_kembali',
+                    'peminjamans.tanggal_dikembalikan',
+                    'peminjamans.status',
+                    'mahasiswas.nama as student_name',
+                    'mahasiswas.nim as student_nim',
+                    'books.judul as book_title'
+                )
+                ->orderBy('peminjamans.created_at', 'desc')
+                ->get();
         } else {
-            // Jika mahasiswa, hanya tampilkan miliknya sendiri
-            $peminjamans = Peminjaman::where('id_user', $user->id_user)->get();
+            // Jika mahasiswa, hanya tampilkan miliknya sendiri dengan data buku
+            $raw = \DB::table('peminjamans')
+                ->join('books', 'peminjamans.id_buku', '=', 'books.id_buku')
+                ->where('peminjamans.id_user', $user->id_user)
+                ->select(
+                    'peminjamans.id_transaksi',
+                    'peminjamans.id_user',
+                    'peminjamans.id_buku',
+                    'peminjamans.tanggal_pinjam',
+                    'peminjamans.tanggal_kembali',
+                    'peminjamans.tanggal_dikembalikan',
+                    'peminjamans.status',
+                    'books.judul',
+                    'books.pengarang',
+                    'books.tahun_terbit',
+                    'books.penerbit',
+                    'books.gambar'
+                )
+                ->orderBy('peminjamans.created_at', 'desc')
+                ->get();
+
+            $peminjamans = collect($raw)->map(function($item) {
+                return [
+                    'id_transaksi' => $item->id_transaksi,
+                    'id_user' => $item->id_user,
+                    'id_buku' => $item->id_buku,
+                    'tanggal_pinjam' => $item->tanggal_pinjam,
+                    'tanggal_kembali' => $item->tanggal_kembali,
+                    'tanggal_dikembalikan' => $item->tanggal_dikembalikan,
+                    'status' => $item->status,
+                    'book' => [
+                        'judul' => $item->judul,
+                        'pengarang' => $item->pengarang,
+                        'tahun_terbit' => $item->tahun_terbit,
+                        'penerbit' => $item->penerbit,
+                        'gambar' => $item->gambar
+                    ]
+                ];
+            });
         }
 
         return response()->json(['status' => 'success', 'data' => $peminjamans], 200);
@@ -85,7 +139,8 @@ class PeminjamanController extends Controller
     // RIWAYAT PEMINJAMAN SAYA
     public function riwayat(Request $request)
     {
-        $riwayat = Peminjaman::where('id_user', $request->user()->id_user)
+        $riwayat = Peminjaman::with('book')
+            ->where('id_user', $request->user()->id_user)
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -95,7 +150,8 @@ class PeminjamanController extends Controller
     // PINJAMAN AKTIF
     public function pinjamanAktif(Request $request, $id)
     {
-        $aktif = Peminjaman::where('id_user', $request->user()->id_user)
+        $aktif = Peminjaman::with('book')
+            ->where('id_user', $request->user()->id_user)
             ->whereIn('status', ['dipinjam', 'disetujui'])
             ->get();
 
