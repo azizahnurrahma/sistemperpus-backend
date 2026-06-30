@@ -175,6 +175,18 @@ class PeminjamanController extends Controller
             $buku->decrement('stok');
         }
 
+        // Buat notifikasi persetujuan
+        \DB::table('notifications')->insert([
+            'id_user' => $peminjaman->id_user,
+            'id_transaksi' => $peminjaman->id_transaksi,
+            'title' => 'Peminjaman Disetujui',
+            'message' => "Peminjaman buku '" . ($buku ? $buku->judul : 'Buku') . "' telah disetujui. Silakan ambil buku di perpustakaan.",
+            'type' => 'approval',
+            'is_read' => false,
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
+        ]);
+
         return response()->json(['status' => 'success', 'message' => 'Peminjaman disetujui'], 200);
     }
 
@@ -188,6 +200,19 @@ class PeminjamanController extends Controller
         }
 
         $peminjaman->update(['status' => 'ditolak']);
+
+        // Buat notifikasi penolakan
+        $buku = Book::find($peminjaman->id_buku);
+        \DB::table('notifications')->insert([
+            'id_user' => $peminjaman->id_user,
+            'id_transaksi' => $peminjaman->id_transaksi,
+            'title' => 'Peminjaman Ditolak',
+            'message' => "Pengajuan peminjaman buku '" . ($buku ? $buku->judul : 'Buku') . "' ditolak.",
+            'type' => 'rejection',
+            'is_read' => false,
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
+        ]);
 
         return response()->json(['status' => 'success', 'message' => 'Peminjaman ditolak'], 200);
     }
@@ -225,6 +250,19 @@ class PeminjamanController extends Controller
                 'id_user' => $peminjaman->id_user,
                 'jumlah_denda' => $jumlahDenda,
                 'status_bayar' => 'belum_bayar',
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ]);
+
+            // Buat notifikasi denda
+            $buku = Book::find($peminjaman->id_buku);
+            \DB::table('notifications')->insert([
+                'id_user' => $peminjaman->id_user,
+                'id_transaksi' => $peminjaman->id_transaksi,
+                'title' => 'Denda Dikenakan',
+                'message' => "Anda dikenakan denda sebesar Rp " . number_format($jumlahDenda, 0, ',', '.') . " karena terlambat mengembalikan buku '" . ($buku ? $buku->judul : 'Buku') . "' sebanyak " . round($selisihHari) . " hari.",
+                'type' => 'fine',
+                'is_read' => false,
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s'),
             ]);

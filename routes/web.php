@@ -41,6 +41,15 @@ $router->group(['middleware' => 'auth'], function () use ($router) {
     $router->get('denda/{id}', 'DendaController@show');
     
     // ============================================
+    // NOTIFICATION ROUTES
+    // ============================================
+    $router->get('notifications', 'NotificationController@index');
+    $router->patch('notifications/{id}/read', 'NotificationController@markAsRead');
+    $router->patch('notifications/read-all', 'NotificationController@markAllAsRead');
+    $router->delete('notifications/{id}', 'NotificationController@destroy');
+    $router->delete('notifications', 'NotificationController@destroyAll');
+    
+    // ============================================
     // ADMIN ROUTES (*Admin)
     // ============================================
     $router->group(['middleware' => 'admin'], function () use ($router) {
