@@ -129,6 +129,24 @@ class PeminjamanController extends Controller
             'status' => 'menunggu',
         ]);
 
+        // Buat notifikasi untuk semua admin
+        $mahasiswa = \DB::table('mahasiswas')->where('id_user', $idUserYangLogin)->first();
+        $namaMahasiswa = $mahasiswa ? $mahasiswa->nama : 'Mahasiswa';
+        $admins = \DB::table('users')->where('role', 'admin')->get();
+
+        foreach ($admins as $admin) {
+            \DB::table('notifications')->insert([
+                'id_user' => $admin->id_user,
+                'id_transaksi' => $peminjaman->id_transaksi,
+                'title' => 'Pengajuan Peminjaman',
+                'message' => "Mahasiswa '{$namaMahasiswa}' mengajukan peminjaman buku '{$buku->judul}'.",
+                'type' => 'borrow_request',
+                'is_read' => false,
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ]);
+        }
+
         return response()->json([
             'status' => 'success',
             'message' => 'Peminjaman berhasil diajukan, menunggu persetujuan admin.',
