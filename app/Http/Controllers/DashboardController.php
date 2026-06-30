@@ -17,7 +17,7 @@ class DashboardController extends Controller
         $totalUser = User::where('role', 'mahasiswa')->count();
         
         // Sesuai UI: "Buku Sedang Dipinjam"
-        $bukuSedangDipinjam = Peminjaman::where('status', 'dipinjam')->count();
+        $bukuSedangDipinjam = Peminjaman::whereIn('status', ['dipinjam', 'disetujui'])->count();
         
         // Sesuai UI: "Denda Belum Dibayar (14 User)" -> Menghitung jumlah USER unik yang punya denda
         $userDendaBelumBayar = \DB::table('dendas')
@@ -25,11 +25,23 @@ class DashboardController extends Controller
             ->distinct('id_user')
             ->count('id_user');
 
-        // Sesuai UI: Tabel "Menunggu Persetujuan" / "Menunggu Diambil"
-        // Pastikan model Peminjaman sudah memiliki relasi 'user' dan 'book'
-        $menungguPersetujuan = Peminjaman::where('status', 'menunggu') 
-            ->with(['user', 'book']) 
-            ->latest()
+        // Sesuai UI: Tabel "Menunggu Persetujuan"
+        $menungguPersetujuan = \DB::table('peminjamans')
+            ->join('users', 'peminjamans.id_user', '=', 'users.id_user')
+            ->join('mahasiswas', 'users.id_user', '=', 'mahasiswas.id_user')
+            ->join('books', 'peminjamans.id_buku', '=', 'books.id_buku')
+            ->where('peminjamans.status', 'menunggu')
+            ->select(
+                'peminjamans.id_transaksi',
+                'peminjamans.tanggal_pinjam',
+                'peminjamans.tanggal_kembali',
+                'peminjamans.status',
+                'users.email',
+                'mahasiswas.nim',
+                'mahasiswas.nama',
+                'books.judul as book_title'
+            )
+            ->latest('peminjamans.created_at')
             ->get();
 
         return response()->json([
@@ -61,10 +73,14 @@ class DashboardController extends Controller
 
         $userId = $user->id_user; // Sesuaikan jika primary key Anda 'id'
 
-        
+        $mahasiswa = \DB::table('mahasiswas')
+            ->leftJoin('prodis', 'mahasiswas.id_prodi', '=', 'prodis.id_prodi')
+            ->where('mahasiswas.id_user', $userId)
+            ->first();
+
         // 1. Jadwal Pengembalian (Buku yang sedang dipinjam saat ini)
         $jadwalPengembalian = Peminjaman::where('id_user', $userId)
-            ->where('status', 'dipinjam')
+            ->whereIn('status', ['dipinjam', 'disetujui'])
             ->with('book')
             ->get();
 
@@ -92,8 +108,8 @@ class DashboardController extends Controller
             'status' => 'success',
             'data' => [
                 'user_info' => [
-                    'nama' => $user->nama,
-                    'prodi' => $user->prodi ?? 'Teknik Informatika', // Fallback jika belum ada field prodi
+                    'nama' => $mahasiswa ? $mahasiswa->nama : 'Mahasiswa',
+                    'prodi' => $mahasiswa ? ($mahasiswa->nama_prodi ?? 'Teknik Informatika') : 'Teknik Informatika',
                 ],
                 'jadwal_pengembalian' => $jadwalPengembalian,
                 'target_bulan_ini' => [

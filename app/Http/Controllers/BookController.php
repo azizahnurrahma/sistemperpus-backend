@@ -33,7 +33,16 @@ class BookController extends Controller
         $input = $request->all();
         
         // LOGIKA SAKTI: Ubah teks rak menjadi HURUF BESAR SEMUA biar seragam di database
-        $input['rak'] = strtoupper($request->rak);
+        if ($request->has('rak')) {
+            $input['rak'] = strtoupper($request->rak);
+        }
+
+        if ($request->hasFile('gambar')) {
+            $file = $request->file('gambar');
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(base_path('public/uploads/books'), $filename);
+            $input['gambar'] = 'uploads/books/' . $filename;
+        }
 
         $book = Book::create($input);
 
@@ -72,6 +81,17 @@ class BookController extends Controller
             $input['rak'] = strtoupper($request->rak);
         }
 
+        if ($request->hasFile('gambar')) {
+            // Hapus gambar lama jika ada
+            if ($book->gambar && file_exists(base_path('public/' . $book->gambar))) {
+                @unlink(base_path('public/' . $book->gambar));
+            }
+            $file = $request->file('gambar');
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $file->move(base_path('public/uploads/books'), $filename);
+            $input['gambar'] = 'uploads/books/' . $filename;
+        }
+
         $book->update($input);
 
         return response()->json([
@@ -88,6 +108,10 @@ class BookController extends Controller
 
         if (!$book) {
             return response()->json(['status' => 'fail', 'message' => 'Buku tidak ditemukan'], 404);
+        }
+
+        if ($book->gambar && file_exists(base_path('public/' . $book->gambar))) {
+            @unlink(base_path('public/' . $book->gambar));
         }
 
         $book->delete();

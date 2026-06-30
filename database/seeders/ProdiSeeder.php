@@ -9,7 +9,10 @@ class ProdiSeeder extends Seeder
 {
     public function run()
     {
-        // Mengisi pilihan prodi otomatis ke database
+        // Bersihkan tabel prodi dulu agar data tidak menumpuk/double saat di-run ulang
+        DB::table('prodis')->delete();
+
+        // Mengisi pilihan prodi otomatis ke database (tepat 5 prodi unik)
         DB::table('prodis')->insert([
             [
                 'nama_prodi' => 'Teknik Informatika',
@@ -22,17 +25,17 @@ class ProdiSeeder extends Seeder
                 'updated_at' => date('Y-m-d H:i:s')
             ],
             [
-                'nama_prodi' => 'akuntansi',
+                'nama_prodi' => 'Akuntansi',
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s')
             ],
             [
-                'nama_prodi' => 'hukum',
+                'nama_prodi' => 'Hukum',
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s')
             ],
             [
-                'nama_prodi' => 'Manajemen',
+                'nama_prodi' => 'Sistem Informasi',
                 'created_at' => date('Y-m-d H:i:s'),
                 'updated_at' => date('Y-m-d H:i:s')
             ]
